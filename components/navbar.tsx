@@ -37,6 +37,7 @@ const navLinks = [
   { href: "/recipients", label: "Recipients" },
   { href: "/occasions", label: "Occasions" },
   { href: "/gift-plans", label: "Gift Plans" },
+  { href: "/gift-bundles", label: "Bundles" },
   { href: "/dashboard", label: "Dashboard" },
 ]
 
