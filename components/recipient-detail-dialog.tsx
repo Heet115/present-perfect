@@ -16,6 +16,7 @@ import {
   Clock,
   History,
   Bookmark,
+  Feather,
 } from "lucide-react"
 import {
   Dialog,
@@ -34,6 +35,7 @@ import { savedGiftService } from "@/lib/services/saved-gift-service"
 import { Recipient } from "@/lib/types/recipient"
 import { GiftHistoryItem } from "@/lib/types/gift-history"
 import { SavedGift } from "@/lib/types/saved-gift"
+import { PersonalCardDialog } from "@/components/personal-card-dialog"
 
 interface RecipientDetailDialogProps {
   open: boolean
@@ -52,6 +54,7 @@ export function RecipientDetailDialog({
 }: RecipientDetailDialogProps) {
   const { user } = useAuth()
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false)
+  const [isCardOpen, setIsCardOpen] = React.useState(false)
   const [pastGifts, setPastGifts] = React.useState<GiftHistoryItem[]>([])
   const [vaultGifts, setVaultGifts] = React.useState<SavedGift[]>([])
   const [loadingHistory, setLoadingHistory] = React.useState(false)
@@ -380,9 +383,18 @@ export function RecipientDetailDialog({
                   Edit Dossier
                 </Button>
                 <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCardOpen(true)}
+                  className="text-xs gap-1.5 cursor-pointer"
+                >
+                  <Feather className="size-3.5 text-primary" />
+                  Compose Card
+                </Button>
+                <Button
                   size="sm"
                   onClick={() => onOpenChange(false)}
-                  className="text-xs"
+                  className="text-xs cursor-pointer"
                 >
                   Close
                 </Button>
@@ -390,6 +402,13 @@ export function RecipientDetailDialog({
             </>
           )}
         </DialogFooter>
+
+        <PersonalCardDialog
+          open={isCardOpen}
+          onOpenChange={setIsCardOpen}
+          initialRecipientName={recipient.name}
+          initialOccasion={recipient.importantDates?.[0]?.title}
+        />
       </DialogContent>
     </Dialog>
   )

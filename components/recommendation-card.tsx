@@ -24,6 +24,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { GiftRecommendation, RecommendationType } from "@/lib/types/recommendation"
+import { PersonalCardDialog } from "@/components/personal-card-dialog"
 
 interface RecommendationCardProps {
   recommendation: GiftRecommendation
@@ -44,6 +45,7 @@ export function RecommendationCard({
   const [isSaved, setIsSaved] = React.useState(false)
   const [isVaultSaved, setIsVaultSaved] = React.useState(false)
   const [showAlternatives, setShowAlternatives] = React.useState(false)
+  const [isCardModalOpen, setIsCardModalOpen] = React.useState(false)
 
   const handleCopyNote = () => {
     if (!recommendation.handwrittenNote) return
@@ -306,13 +308,22 @@ export function RecommendationCard({
                   Envelope Note {recommendation.sentimentTone && `(${recommendation.sentimentTone})`}
                 </span>
               </span>
-              <button
-                onClick={handleCopyNote}
-                className="hover:text-foreground flex items-center gap-1 text-[10px] cursor-pointer"
-              >
-                {copied ? <Check className="size-3 text-primary" /> : <Copy className="size-3" />}
-                <span>{copied ? "Copied" : "Copy"}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCardModalOpen(true)}
+                  className="hover:text-foreground text-[10px] text-primary underline font-medium cursor-pointer"
+                >
+                  Personalize
+                </button>
+                <button
+                  onClick={handleCopyNote}
+                  className="hover:text-foreground flex items-center gap-1 text-[10px] cursor-pointer"
+                >
+                  {copied ? <Check className="size-3 text-primary" /> : <Copy className="size-3" />}
+                  <span>{copied ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
             </div>
             <p className="font-serif italic text-xs text-foreground/90 leading-relaxed">
               &ldquo;{recommendation.handwrittenNote}&rdquo;
@@ -320,6 +331,13 @@ export function RecommendationCard({
           </div>
         )}
       </CardContent>
+
+      <PersonalCardDialog
+        open={isCardModalOpen}
+        onOpenChange={setIsCardModalOpen}
+        initialRecipientName={recipientName}
+        giftItemName={recommendation.name}
+      />
 
       <CardFooter className="p-6 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
         <a
