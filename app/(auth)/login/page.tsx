@@ -7,6 +7,7 @@ import { Gift, Sparkles, AlertCircle, Loader2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/context/auth-context"
 
@@ -132,12 +133,12 @@ export default function LoginPage() {
         {/* Email / Password Form */}
         <form onSubmit={handleEmailLogin} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label
+            <Label
               htmlFor="login-email"
               className="text-xs font-medium text-foreground/90"
             >
               Email address
-            </label>
+            </Label>
             <Input
               id="login-email"
               type="email"
@@ -152,12 +153,12 @@ export default function LoginPage() {
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <label
+              <Label
                 htmlFor="login-password"
                 className="text-xs font-medium text-foreground/90"
               >
                 Password
-              </label>
+              </Label>
               <Link
                 href="/forgot-password"
                 className="text-xs text-primary hover:underline font-medium"

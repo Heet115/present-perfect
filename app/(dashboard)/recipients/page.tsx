@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { RecipientFormDialog } from "@/components/recipient-form-dialog"
 import { RecipientDetailDialog } from "@/components/recipient-detail-dialog"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useAuth } from "@/context/auth-context"
 import { recipientService } from "@/lib/services/recipient-service"
 import { Recipient } from "@/lib/types/recipient"
@@ -37,6 +38,7 @@ export default function RecipientsPage() {
   const [recipientToEdit, setRecipientToEdit] = React.useState<Recipient | null>(null)
   const [selectedRecipient, setSelectedRecipient] = React.useState<Recipient | null>(null)
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
+  const [recipientToDelete, setRecipientToDelete] = React.useState<Recipient | null>(null)
 
   const loadRecipients = React.useCallback(async () => {
     if (!user) return
@@ -246,10 +248,8 @@ export default function RecipientsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => {
-                            if (recipient.id) handleDelete(recipient.id)
-                          }}
+                          className="size-8 text-muted-foreground hover:text-destructive cursor-pointer"
+                          onClick={() => setRecipientToDelete(recipient)}
                           title="Delete"
                         >
                           <Trash2 className="size-3.5" />
@@ -282,6 +282,21 @@ export default function RecipientsPage() {
           setIsFormOpen(true)
         }}
         onDelete={handleDelete}
+      />
+
+      {/* Confirmation Dialog before destructive deletion */}
+      <ConfirmDialog
+        open={!!recipientToDelete}
+        onOpenChange={(open) => !open && setRecipientToDelete(null)}
+        title={`Delete ${recipientToDelete?.name}'s Dossier`}
+        description="Are you sure you wish to delete this recipient dossier? All associated sizing, notes, and milestones will be permanently removed."
+        confirmText="Delete Dossier"
+        onConfirm={async () => {
+          if (recipientToDelete?.id) {
+            await handleDelete(recipientToDelete.id)
+            setRecipientToDelete(null)
+          }
+        }}
       />
     </div>
   )

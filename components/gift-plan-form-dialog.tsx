@@ -20,6 +20,15 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/context/auth-context"
@@ -127,25 +136,31 @@ export function GiftPlanFormDialog({
     const selectedRecipient = recipients.find((r) => r.id === recipientId)
     const selectedOccasion = occasions.find((o) => o.id === occasionId)
 
-    const payload = {
+    const payload: Record<string, any> = {
       recipientId,
       recipientName: selectedRecipient?.name || "Recipient",
-      occasionId: occasionId || undefined,
-      occasionTitle: selectedOccasion?.title || undefined,
-      occasionDate: selectedOccasion?.date || undefined,
       status,
       targetBudget: parseFloat(targetBudget) || 0,
-      actualSpend: actualSpend ? parseFloat(actualSpend) : undefined,
       currency,
       giftIdeas,
-      notes: notes.trim() || undefined,
+    }
+    if (occasionId) {
+      payload.occasionId = occasionId
+      if (selectedOccasion?.title) payload.occasionTitle = selectedOccasion.title
+      if (selectedOccasion?.date) payload.occasionDate = selectedOccasion.date
+    }
+    if (actualSpend && !isNaN(parseFloat(actualSpend))) {
+      payload.actualSpend = parseFloat(actualSpend)
+    }
+    if (notes.trim()) {
+      payload.notes = notes.trim()
     }
 
     try {
       if (planToEdit?.id) {
         await occasionService.updateGiftPlan(user.uid, planToEdit.id, payload)
       } else {
-        await occasionService.createGiftPlan(user.uid, payload)
+        await occasionService.createGiftPlan(user.uid, payload as any)
       }
       onOpenChange(false)
       onSuccess()
@@ -186,66 +201,88 @@ export function GiftPlanFormDialog({
           {/* Recipient & Occasion */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Recipient *
-              </label>
-              <select
+              </Label>
+              <Select
                 value={recipientId}
-                onChange={(e) => setRecipientId(e.target.value)}
-                required
-                className="h-10 rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground outline-none"
+                onValueChange={(val) => setRecipientId(val ?? "")}
               >
-                <option value="">Select Recipient...</option>
-                {recipients.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name} ({r.relationship})
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground">
+                  <SelectValue placeholder="Select Recipient...">
+                    {recipientId
+                      ? recipients.find((r) => r.id === recipientId)?.name
+                      : "Select Recipient..."}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {recipients.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name} ({r.relationship})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Associated Occasion
-              </label>
-              <select
-                value={occasionId}
-                onChange={(e) => setOccasionId(e.target.value)}
-                className="h-10 rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground outline-none"
+              </Label>
+              <Select
+                value={occasionId || "none"}
+                onValueChange={(val) => setOccasionId(val === "none" ? "" : (val ?? ""))}
               >
-                <option value="">None / Custom Surprise</option>
-                {occasions.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.title} ({o.date})
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground">
+                  <SelectValue placeholder="None / Custom Surprise">
+                    {occasionId
+                      ? occasions.find((o) => o.id === occasionId)?.title
+                      : "None / Custom Surprise"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None / Custom Surprise</SelectItem>
+                  {occasions.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.title} ({o.date})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           {/* Status & Budget */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Plan Status
-              </label>
-              <select
+              </Label>
+              <Select
                 value={status}
-                onChange={(e) => setStatus(e.target.value as GiftPlanStatus)}
-                className="h-10 rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground outline-none"
+                onValueChange={(val) => {
+                  if (val) setStatus(val as GiftPlanStatus)
+                }}
               >
-                {statusOptions.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground">
+                  <SelectValue>
+                    {statusOptions.find((s) => s.value === status)?.label || status}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Budget (₹)
-              </label>
+              </Label>
               <Input
                 type="number"
                 value={targetBudget}
@@ -257,9 +294,9 @@ export function GiftPlanFormDialog({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Actual Spend (₹)
-              </label>
+              </Label>
               <Input
                 type="number"
                 value={actualSpend}
@@ -275,12 +312,12 @@ export function GiftPlanFormDialog({
 
           {/* Gift Ideas Section */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
+            <Label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
               <span>Gift Ideas & Shortlist</span>
               <span className="text-[11px] text-muted-foreground font-normal">
                 Add potential pieces
               </span>
-            </label>
+            </Label>
 
             <div className="flex gap-2">
               <Input
@@ -344,15 +381,15 @@ export function GiftPlanFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground/90">
+            <Label className="text-xs font-medium text-foreground/90">
               Planning Notes & Delivery Reminders
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Delivery deadlines, store URLs, or gift wrap instructions..."
-              className="w-full resize-none rounded-xl border border-input bg-background/60 p-3 text-xs text-foreground outline-none focus:border-ring"
+              className="min-h-[70px] w-full rounded-xl border border-input bg-background/60 p-3 text-xs text-foreground"
             />
           </div>
 

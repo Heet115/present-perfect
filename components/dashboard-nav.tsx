@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
 
@@ -98,6 +99,7 @@ export function DashboardNav() {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuth()
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false)
 
   const handleLogout = async () => {
     try {
@@ -204,9 +206,9 @@ export function DashboardNav() {
               </div>
 
               <button
-                onClick={handleLogout}
+                onClick={() => setShowLogoutConfirm(true)}
                 title="Log out"
-                className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0 cursor-pointer"
               >
                 <LogOut className="size-3.5" />
               </button>
@@ -214,6 +216,16 @@ export function DashboardNav() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Sign Out of Present Perfect?"
+        description="Are you sure you want to end your current concierge session? You can sign back in at any time to access your saved dossiers and gift plans."
+        confirmText="Sign Out"
+        cancelText="Stay Signed In"
+        onConfirm={handleLogout}
+      />
     </aside>
   )
 }

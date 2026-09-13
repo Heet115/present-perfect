@@ -35,6 +35,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/context/auth-context"
 import { recipientService } from "@/lib/services/recipient-service"
@@ -295,12 +303,15 @@ export default function FindGiftPage() {
   const handleSaveToVault = async (rec: GiftRecommendation) => {
     if (!user) return
     try {
-      await savedGiftService.save(user.uid, {
-        recipientId: selectedRecipientId || undefined,
+      const payload: any = {
         recipientName: recipientName.trim() || "Someone Special",
         recommendation: rec,
         notes: `Saved via AI Gift Finder for ${occasion}. Note: "${rec.handwrittenNote}"`,
-      })
+      }
+      if (selectedRecipientId) {
+        payload.recipientId = selectedRecipientId
+      }
+      await savedGiftService.save(user.uid, payload)
       setSavedNotification(`Saved "${rec.name}" to your permanent Gift Vault!`)
       setTimeout(() => setSavedNotification(null), 4000)
     } catch (err) {
@@ -597,18 +608,26 @@ export default function FindGiftPage() {
                     <span className="text-xs text-muted-foreground hidden sm:inline">
                       Autofill from Dossier:
                     </span>
-                    <select
-                      value={selectedRecipientId}
-                      onChange={(e) => handleSelectRecipient(e.target.value)}
-                      className="h-9 rounded-xl border border-input bg-background/80 px-2.5 text-xs text-foreground outline-none cursor-pointer"
+                    <Select
+                      value={selectedRecipientId || "manual"}
+                      onValueChange={(val) => handleSelectRecipient(val === "manual" ? "" : (val ?? ""))}
                     >
-                      <option value="">Manual Entry</option>
-                      {recipients.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name} ({r.relationship})
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-9 w-44 rounded-xl border border-input bg-background/80 px-2.5 text-xs text-foreground cursor-pointer">
+                        <SelectValue placeholder="Manual Entry">
+                          {selectedRecipientId
+                            ? recipients.find((r) => r.id === selectedRecipientId)?.name
+                            : "Manual Entry"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manual">Manual Entry</SelectItem>
+                        {recipients.map((r) => (
+                          <SelectItem key={r.id} value={r.id}>
+                            {r.name} ({r.relationship})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
               </div>
@@ -619,9 +638,9 @@ export default function FindGiftPage() {
                 {/* Identity row */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <div className="sm:col-span-2 flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-foreground/90">
+                    <Label className="text-xs font-medium text-foreground/90">
                       Who are you buying for? *
-                    </label>
+                    </Label>
                     <Input
                       value={recipientName}
                       onChange={(e) => setRecipientName(e.target.value)}
@@ -632,9 +651,9 @@ export default function FindGiftPage() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-foreground/90">
+                    <Label className="text-xs font-medium text-foreground/90">
                       Relationship
-                    </label>
+                    </Label>
                     <Input
                       value={relationship}
                       onChange={(e) => setRelationship(e.target.value)}
@@ -644,9 +663,9 @@ export default function FindGiftPage() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-foreground/90">
+                    <Label className="text-xs font-medium text-foreground/90">
                       Age / Life Stage
-                    </label>
+                    </Label>
                     <Input
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
@@ -659,9 +678,9 @@ export default function FindGiftPage() {
                 {/* Occasion & Budget */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="flex flex-col gap-1.5 sm:col-span-2">
-                    <label className="text-xs font-medium text-foreground/90">
+                    <Label className="text-xs font-medium text-foreground/90">
                       Celebration or Milestone *
-                    </label>
+                    </Label>
                     <Input
                       value={occasion}
                       onChange={(e) => setOccasion(e.target.value)}
@@ -672,9 +691,9 @@ export default function FindGiftPage() {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-foreground/90">
+                    <Label className="text-xs font-medium text-foreground/90">
                       Budget (₹)
-                    </label>
+                    </Label>
                     <Input
                       type="number"
                       value={budget}
@@ -693,12 +712,12 @@ export default function FindGiftPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Interests */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
+                    <Label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
                       <span>Passions & Obsessions</span>
                       <span className="text-[10px] text-muted-foreground font-normal">
                         Press Enter to add
                       </span>
-                    </label>
+                    </Label>
                     <div className="flex gap-2">
                       <Input
                         value={interestInput}
@@ -739,12 +758,12 @@ export default function FindGiftPage() {
 
                   {/* Personality Traits */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
+                    <Label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
                       <span>Personality & Temperament</span>
                       <span className="text-[10px] text-muted-foreground font-normal">
                         Press Enter to add
                       </span>
-                    </label>
+                    </Label>
                     <div className="flex gap-2">
                       <Input
                         value={traitInput}
@@ -786,12 +805,12 @@ export default function FindGiftPage() {
 
                 {/* Things to Avoid */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
+                  <Label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
                     <span>Gifts to Avoid (Dislikes, Allergies, Anti-Goals)</span>
                     <span className="text-[10px] text-muted-foreground font-normal">
                       Press Enter to add
                     </span>
-                  </label>
+                  </Label>
                   <div className="flex gap-2">
                     <Input
                       value={dislikeInput}
@@ -1038,15 +1057,27 @@ export default function FindGiftPage() {
             {/* Sorting selector */}
             <div className="flex items-center gap-2 self-end sm:self-auto">
               <span className="text-[11px] text-muted-foreground font-medium">Sort by:</span>
-              <select
+              <Select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "match" | "price-asc" | "price-desc")}
-                className="h-8 rounded-lg border border-input bg-background/80 px-2 text-xs text-foreground outline-none cursor-pointer"
+                onValueChange={(val) => {
+                  if (val) setSortBy(val as "match" | "price-asc" | "price-desc")
+                }}
               >
-                <option value="match">Highest Match %</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-              </select>
+                <SelectTrigger className="h-8 w-38 rounded-xl border border-input bg-background/80 px-2 text-xs text-foreground cursor-pointer">
+                  <SelectValue>
+                    {sortBy === "match"
+                      ? "Highest Match %"
+                      : sortBy === "price-asc"
+                      ? "Price: Low to High"
+                      : "Price: High to Low"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="match">Highest Match %</SelectItem>
+                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

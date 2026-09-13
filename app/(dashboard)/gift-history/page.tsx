@@ -22,10 +22,18 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useAuth } from "@/context/auth-context"
 import { giftHistoryService } from "@/lib/services/gift-history-service"
 import { recipientService } from "@/lib/services/recipient-service"
 import { GiftHistoryDialog } from "@/components/gift-history-dialog"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { GiftHistoryItem } from "@/lib/types/gift-history"
 import { Recipient } from "@/lib/types/recipient"
 
@@ -40,6 +48,7 @@ export default function GiftHistoryPage() {
   // Dialog states
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [itemToEdit, setItemToEdit] = React.useState<GiftHistoryItem | null>(null)
+  const [itemToDelete, setItemToDelete] = React.useState<{ id: string; name: string } | null>(null)
   const [notification, setNotification] = React.useState<string | null>(null)
 
   const loadData = React.useCallback(async () => {
@@ -198,18 +207,24 @@ export default function GiftHistoryPage() {
 
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground font-medium">Recipient:</span>
-            <select
+            <Select
               value={selectedRecipientFilter}
-              onChange={(e) => setSelectedRecipientFilter(e.target.value)}
-              className="h-9 rounded-xl border border-input bg-background/80 px-3 text-xs text-foreground outline-none cursor-pointer"
+              onValueChange={(val) => {
+                if (val) setSelectedRecipientFilter(val)
+              }}
             >
-              <option value="All">All Recipients</option>
-              {Array.from(new Set(history.map((h) => h.recipientName).filter(Boolean))).map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-9 w-44 rounded-xl border border-input bg-background/80 px-3 text-xs text-foreground cursor-pointer">
+                <SelectValue>{selectedRecipientFilter}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Recipients</SelectItem>
+                {Array.from(new Set(history.map((h) => h.recipientName).filter(Boolean))).map((name) => (
+                  <SelectItem key={name} value={name!}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       )}
@@ -287,7 +302,7 @@ export default function GiftHistoryPage() {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => handleDelete(item.id, item.giftName)}
+                    onClick={() => setItemToDelete({ id: item.id, name: item.giftName })}
                     className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                     title="Delete record"
                   >
@@ -330,6 +345,21 @@ export default function GiftHistoryPage() {
         recipients={recipients}
         initialData={itemToEdit}
         onSubmit={handleSave}
+      />
+
+      {/* Confirmation Dialog before deleting archive record */}
+      <ConfirmDialog
+        open={!!itemToDelete}
+        onOpenChange={(open) => !open && setItemToDelete(null)}
+        title={`Delete "${itemToDelete?.name}" from Archive?`}
+        description="Are you sure you want to delete this gift history entry? This past memory record will be permanently removed."
+        confirmText="Delete Record"
+        onConfirm={async () => {
+          if (itemToDelete) {
+            await handleDelete(itemToDelete.id, itemToDelete.name)
+            setItemToDelete(null)
+          }
+        }}
       />
     </div>
   )

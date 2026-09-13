@@ -11,7 +11,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { db, cleanFirestoreData } from "@/lib/firebase"
 import { Recipient, UserProfile } from "@/lib/types/recipient"
 
 const getUserRecipientsRef = (userId: string) =>
@@ -44,12 +44,13 @@ export const recipientService = {
   // Add a new recipient dossier
   async create(userId: string, data: Omit<Recipient, "id" | "userId" | "createdAt" | "updatedAt">): Promise<string> {
     if (!userId) throw new Error("User ID is required to create a recipient.")
-    const docRef = await addDoc(getUserRecipientsRef(userId), {
+    const sanitized = cleanFirestoreData({
       ...data,
       userId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
+    const docRef = await addDoc(getUserRecipientsRef(userId), sanitized)
     return docRef.id
   },
 
@@ -61,10 +62,11 @@ export const recipientService = {
   ): Promise<void> {
     if (!userId || !recipientId) throw new Error("Invalid parameters for update.")
     const ref = doc(db, "users", userId, "recipients", recipientId)
-    await updateDoc(ref, {
+    const sanitized = cleanFirestoreData({
       ...data,
       updatedAt: serverTimestamp(),
     })
+    await updateDoc(ref, sanitized)
   },
 
   // Delete recipient

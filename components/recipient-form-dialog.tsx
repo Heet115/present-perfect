@@ -21,6 +21,16 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { DatePicker } from "@/components/ui/date-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/context/auth-context"
@@ -239,9 +249,9 @@ export function RecipientFormDialog({
           {/* Section 1: Basic Identity */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2 flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Full or Preferred Name *
-              </label>
+              </Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -252,20 +262,26 @@ export function RecipientFormDialog({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Relationship
-              </label>
-              <select
+              </Label>
+              <Select
                 value={relationship}
-                onChange={(e) => setRelationship(e.target.value)}
-                className="h-10 rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground outline-none"
+                onValueChange={(val) => {
+                  if (val) setRelationship(val)
+                }}
               >
-                {relationshipOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground">
+                  <SelectValue>{relationship}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {relationshipOptions.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -273,12 +289,12 @@ export function RecipientFormDialog({
 
           {/* Section 2: Interests & Passions */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
+            <Label className="text-xs font-medium text-foreground/90 flex items-center justify-between">
               <span>Passions & Interests</span>
               <span className="text-[11px] text-muted-foreground font-normal">
                 Press Enter to add chip
               </span>
-            </label>
+            </Label>
             <div className="flex gap-2">
               <Input
                 value={interestInput}
@@ -326,9 +342,9 @@ export function RecipientFormDialog({
 
           {/* Section 3: Personality Traits */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-foreground/90">
+            <Label className="text-xs font-medium text-foreground/90">
               Personality Traits
-            </label>
+            </Label>
             <div className="flex flex-wrap gap-1.5 mb-1.5">
               {suggestedTraits.map((trait) => {
                 const isSelected = personalityTraits.includes(trait)
@@ -385,9 +401,9 @@ export function RecipientFormDialog({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Favorites */}
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Things They Adore / Specific Brands
-              </label>
+              </Label>
               <div className="flex gap-1.5">
                 <Input
                   value={favInput}
@@ -431,9 +447,9 @@ export function RecipientFormDialog({
 
             {/* Dislikes */}
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Things They Dislike (Strictly Avoid)
-              </label>
+              </Label>
               <div className="flex gap-1.5">
                 <Input
                   value={dislikeInput}
@@ -480,10 +496,10 @@ export function RecipientFormDialog({
 
           {/* Section 5: Important Dates */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-foreground/90 flex items-center gap-1.5">
+            <Label className="text-xs font-medium text-foreground/90 flex items-center gap-1.5">
               <Calendar className="size-3.5 text-primary" />
               <span>Important Dates & Milestones</span>
-            </label>
+            </Label>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
               <Input
@@ -492,10 +508,10 @@ export function RecipientFormDialog({
                 placeholder="Occasion (e.g. Birthday)"
                 className="h-9 bg-background/60 text-xs sm:col-span-2"
               />
-              <Input
-                type="date"
+              <DatePicker
                 value={dateValue}
-                onChange={(e) => setDateValue(e.target.value)}
+                onChange={setDateValue}
+                placeholder="Select date"
                 className="h-9 bg-background/60 text-xs"
               />
               <Button
@@ -540,9 +556,9 @@ export function RecipientFormDialog({
           {/* Section 6: Sizing & Personal Notes */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Sizing & Color Preferences
-              </label>
+              </Label>
               <Input
                 value={sizing}
                 onChange={(e) => setSizing(e.target.value)}
@@ -551,9 +567,9 @@ export function RecipientFormDialog({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Aesthetic & Living Context
-              </label>
+              </Label>
               <Input
                 value={preferredVibe}
                 onChange={(e) => setPreferredVibe(e.target.value)}
@@ -564,15 +580,15 @@ export function RecipientFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground/90">
+            <Label className="text-xs font-medium text-foreground/90">
               Personal Notes & Inside Stories
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               rows={3}
               value={personalNotes}
               onChange={(e) => setPersonalNotes(e.target.value)}
               placeholder="Any details you want the AI concierge to keep in mind (e.g. Dreams of visiting Iceland, allergic to lavender, sentimental about handmade gifts)"
-              className="w-full resize-none rounded-xl border border-input bg-background/60 p-3 text-xs text-foreground outline-none focus:border-ring"
+              className="min-h-[80px] w-full rounded-xl border border-input bg-background/60 p-3 text-xs text-foreground"
             />
           </div>
 

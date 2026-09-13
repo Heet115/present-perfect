@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { OccasionFormDialog } from "@/components/occasion-form-dialog"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useAuth } from "@/context/auth-context"
 import { occasionService, getDaysRemaining } from "@/lib/services/occasion-service"
 import { Occasion } from "@/lib/types/occasion"
@@ -30,6 +31,7 @@ export default function OccasionsPage() {
   const [loading, setLoading] = React.useState(true)
   const [isFormOpen, setIsFormOpen] = React.useState(false)
   const [occasionToEdit, setOccasionToEdit] = React.useState<Occasion | null>(null)
+  const [occasionToDelete, setOccasionToDelete] = React.useState<Occasion | null>(null)
   const [filter, setFilter] = React.useState<"all" | "upcoming" | "past">("all")
 
   const loadOccasions = React.useCallback(async () => {
@@ -245,10 +247,8 @@ export default function OccasionsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => {
-                            if (occasion.id) handleDelete(occasion.id)
-                          }}
+                          className="size-8 text-muted-foreground hover:text-destructive cursor-pointer"
+                          onClick={() => setOccasionToDelete(occasion)}
                           title="Delete"
                         >
                           <Trash2 className="size-3.5" />
@@ -269,6 +269,21 @@ export default function OccasionsPage() {
         onOpenChange={setIsFormOpen}
         occasionToEdit={occasionToEdit}
         onSuccess={loadOccasions}
+      />
+
+      {/* Confirmation Dialog before deleting occasion */}
+      <ConfirmDialog
+        open={!!occasionToDelete}
+        onOpenChange={(open) => !open && setOccasionToDelete(null)}
+        title={`Delete "${occasionToDelete?.title}"?`}
+        description="Are you sure you want to remove this milestone? Any countdowns and notifications associated with it will be cleared."
+        confirmText="Delete Occasion"
+        onConfirm={async () => {
+          if (occasionToDelete?.id) {
+            await handleDelete(occasionToDelete.id)
+            setOccasionToDelete(null)
+          }
+        }}
       />
     </div>
   )

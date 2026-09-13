@@ -9,7 +9,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { db, cleanFirestoreData } from "@/lib/firebase"
 import { SavedGift } from "@/lib/types/saved-gift"
 
 const getSavedGiftsRef = (userId: string) =>
@@ -42,11 +42,12 @@ export const savedGiftService = {
     data: Omit<SavedGift, "id" | "userId" | "savedAt">
   ): Promise<string> {
     if (!userId) throw new Error("User ID is required.")
-    const docRef = await addDoc(getSavedGiftsRef(userId), {
+    const sanitized = cleanFirestoreData({
       ...data,
       userId,
       savedAt: serverTimestamp(),
     })
+    const docRef = await addDoc(getSavedGiftsRef(userId), sanitized)
     return docRef.id
   },
 

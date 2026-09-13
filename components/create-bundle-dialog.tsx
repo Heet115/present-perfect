@@ -12,6 +12,14 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Recipient } from "@/lib/types/recipient"
 import { GiftBundle, BundleItem } from "@/lib/types/bundle"
@@ -89,9 +97,8 @@ export function CreateBundleDialog({
 
     setSubmitting(true)
     try {
-      await onSubmit({
+      const payload: Record<string, any> = {
         title: title.trim(),
-        recipientId: selectedRecipientId || undefined,
         recipientName,
         targetBudget: Number(targetBudget) || 0,
         currency,
@@ -101,7 +108,11 @@ export function CreateBundleDialog({
           price: i.price,
           category: i.category,
         })),
-      })
+      }
+      if (selectedRecipientId && selectedRecipientId !== "custom") {
+        payload.recipientId = selectedRecipientId
+      }
+      await onSubmit(payload as any)
       onOpenChange(false)
       setTitle("")
       setItems([])
@@ -131,7 +142,7 @@ export function CreateBundleDialog({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
           {/* Title */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground">Bundle Name *</label>
+            <Label className="text-xs font-medium text-foreground">Bundle Name *</Label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -144,20 +155,30 @@ export function CreateBundleDialog({
           {/* Recipient and Target Budget */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">Recipient *</label>
+              <Label className="text-xs font-medium text-foreground">Recipient *</Label>
               {recipients.length > 0 ? (
-                <select
+                <Select
                   value={selectedRecipientId}
-                  onChange={(e) => handleRecipientChange(e.target.value)}
-                  className="h-10 rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground outline-none cursor-pointer"
+                  onValueChange={(val) => handleRecipientChange(val ?? "")}
                 >
-                  {recipients.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} ({r.relationship})
-                    </option>
-                  ))}
-                  <option value="custom">Other / Custom</option>
-                </select>
+                  <SelectTrigger className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground cursor-pointer">
+                    <SelectValue placeholder="Select Recipient...">
+                      {selectedRecipientId === "custom"
+                        ? "Other / Custom"
+                        : selectedRecipientId
+                        ? recipients.find((r) => r.id === selectedRecipientId)?.name
+                        : "Select Recipient..."}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {recipients.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.name} ({r.relationship})
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="custom">Other / Custom</SelectItem>
+                  </SelectContent>
+                </Select>
               ) : (
                 <Input
                   value={customRecipientName}
@@ -170,7 +191,7 @@ export function CreateBundleDialog({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">Target Budget (₹) *</label>
+              <Label className="text-xs font-medium text-foreground">Target Budget (₹) *</Label>
               <Input
                 type="number"
                 value={targetBudget}

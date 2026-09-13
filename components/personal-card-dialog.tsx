@@ -23,6 +23,14 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Recipient } from "@/lib/types/recipient"
 import { MessageOccasion, MessageTone } from "@/app/api/personalize-message/route"
@@ -180,7 +188,7 @@ export function PersonalCardDialog({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Recipient */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">For Recipient</label>
+              <Label className="text-xs font-medium text-foreground">For Recipient</Label>
               <Input
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
@@ -191,25 +199,31 @@ export function PersonalCardDialog({
 
             {/* Occasion */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">Occasion</label>
-              <select
+              <Label className="text-xs font-medium text-foreground">Occasion</Label>
+              <Select
                 value={selectedOccasion}
-                onChange={(e) => setSelectedOccasion(e.target.value as MessageOccasion)}
-                className="h-9 rounded-xl border border-input bg-background/70 px-3 text-xs text-foreground outline-none cursor-pointer"
+                onValueChange={(val) => {
+                  if (val) setSelectedOccasion(val as MessageOccasion)
+                }}
               >
-                {occasions.map((occ) => (
-                  <option key={occ} value={occ}>
-                    {occ}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-9 w-full rounded-xl border border-input bg-background/70 px-3 text-xs text-foreground cursor-pointer">
+                  <SelectValue>{selectedOccasion}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {occasions.map((occ) => (
+                    <SelectItem key={occ} value={occ}>
+                      {occ}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Custom details / memory */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">
+              <Label className="text-xs font-medium text-foreground">
                 Nuance / Inside Joke (Optional)
-              </label>
+              </Label>
               <Input
                 value={customDetails}
                 onChange={(e) => setCustomDetails(e.target.value)}
@@ -221,7 +235,7 @@ export function PersonalCardDialog({
 
           {selectedOccasion === "Custom" && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">Custom Occasion Name</label>
+              <Label className="text-xs font-medium text-foreground">Custom Occasion Name</Label>
               <Input
                 value={customOccasion}
                 onChange={(e) => setCustomOccasion(e.target.value)}
@@ -233,10 +247,10 @@ export function PersonalCardDialog({
 
           {/* Tone Selector Pills */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <SlidersHorizontal className="size-3.5 text-primary" />
               <span>Select Tone of Voice:</span>
-            </label>
+            </Label>
             <div className="flex flex-wrap gap-1.5">
               {tones.map((t) => (
                 <button

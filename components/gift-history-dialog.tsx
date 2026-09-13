@@ -12,6 +12,16 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { DatePicker } from "@/components/ui/date-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Recipient } from "@/lib/types/recipient"
 import { GiftHistoryItem } from "@/lib/types/gift-history"
 
@@ -81,16 +91,21 @@ export function GiftHistoryDialog({
 
     setSubmitting(true)
     try {
-      await onSubmit({
+      const payload: Record<string, any> = {
         giftName: giftName.trim(),
-        recipientId: selectedRecipientId || undefined,
         recipientName,
         giftPrice: Number(giftPrice) || 0,
         currency,
         occasion: occasion.trim() || "Celebration",
         giftDate,
-        giftNotes: giftNotes.trim() || undefined,
-      })
+      }
+      if (selectedRecipientId && selectedRecipientId !== "custom") {
+        payload.recipientId = selectedRecipientId
+      }
+      if (giftNotes.trim()) {
+        payload.giftNotes = giftNotes.trim()
+      }
+      await onSubmit(payload as any)
       onOpenChange(false)
     } catch (err) {
       console.error("Failed to save history entry:", err)
@@ -118,7 +133,7 @@ export function GiftHistoryDialog({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
           {/* Gift Name */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground">Gift Name *</label>
+            <Label className="text-xs font-medium text-foreground">Gift Name *</Label>
             <Input
               value={giftName}
               onChange={(e) => setGiftName(e.target.value)}
@@ -130,20 +145,30 @@ export function GiftHistoryDialog({
 
           {/* Recipient Selector */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground">Recipient *</label>
+            <Label className="text-xs font-medium text-foreground">Recipient *</Label>
             {recipients.length > 0 ? (
-              <select
+              <Select
                 value={selectedRecipientId}
-                onChange={(e) => handleRecipientChange(e.target.value)}
-                className="h-10 rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground outline-none cursor-pointer"
+                onValueChange={(val) => handleRecipientChange(val ?? "")}
               >
-                {recipients.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name} ({r.relationship})
-                  </option>
-                ))}
-                <option value="custom">Other / Custom Recipient</option>
-              </select>
+                <SelectTrigger className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground cursor-pointer">
+                  <SelectValue placeholder="Select Recipient...">
+                    {selectedRecipientId === "custom"
+                      ? "Other / Custom Recipient"
+                      : selectedRecipientId
+                      ? recipients.find((r) => r.id === selectedRecipientId)?.name
+                      : "Select Recipient..."}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {recipients.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name} ({r.relationship})
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="custom">Other / Custom Recipient</SelectItem>
+                </SelectContent>
+              </Select>
             ) : null}
 
             {(!recipients.length || selectedRecipientId === "custom") && (
@@ -160,7 +185,7 @@ export function GiftHistoryDialog({
           {/* Occasion & Date */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">Occasion *</label>
+              <Label className="text-xs font-medium text-foreground">Occasion *</Label>
               <Input
                 value={occasion}
                 onChange={(e) => setOccasion(e.target.value)}
@@ -171,20 +196,19 @@ export function GiftHistoryDialog({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">Date Given *</label>
-              <Input
-                type="date"
+              <Label className="text-xs font-medium text-foreground">Date Given *</Label>
+              <DatePicker
                 value={giftDate}
-                onChange={(e) => setGiftDate(e.target.value)}
+                onChange={setGiftDate}
+                placeholder="Pick date given"
                 required
-                className="h-10 text-xs bg-background/60 rounded-xl font-mono"
               />
             </div>
           </div>
 
           {/* Price */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground">Price / Spend (₹) *</label>
+            <Label className="text-xs font-medium text-foreground">Price / Spend (₹) *</Label>
             <Input
               type="number"
               value={giftPrice}
@@ -198,15 +222,15 @@ export function GiftHistoryDialog({
 
           {/* Notes & Memories */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground">
+            <Label className="text-xs font-medium text-foreground">
               Personal Reaction & Memories (Optional)
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               value={giftNotes}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setGiftNotes(e.target.value)}
               placeholder="How did they react? Did they use it immediately? Where did you purchase it?"
               rows={3}
-              className="w-full rounded-xl border border-input bg-background/60 p-3 text-xs text-foreground outline-none resize-none"
+              className="min-h-[80px] w-full rounded-xl border border-input bg-background/60 p-3 text-xs text-foreground resize-none"
             />
           </div>
 

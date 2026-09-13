@@ -10,7 +10,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { db, cleanFirestoreData } from "@/lib/firebase"
 import { Occasion, GiftPlan, GiftPlanStatus } from "@/lib/types/occasion"
 
 const getUserOccasionsRef = (userId: string) =>
@@ -33,22 +33,24 @@ export const occasionService = {
 
   async createOccasion(userId: string, data: Omit<Occasion, "id" | "userId" | "createdAt" | "updatedAt">): Promise<string> {
     if (!userId) throw new Error("User ID is required.")
-    const docRef = await addDoc(getUserOccasionsRef(userId), {
+    const sanitized = cleanFirestoreData({
       ...data,
       userId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
+    const docRef = await addDoc(getUserOccasionsRef(userId), sanitized)
     return docRef.id
   },
 
   async updateOccasion(userId: string, occasionId: string, data: Partial<Omit<Occasion, "id" | "userId" | "createdAt">>): Promise<void> {
     if (!userId || !occasionId) throw new Error("Invalid parameters for update.")
     const ref = doc(db, "users", userId, "occasions", occasionId)
-    await updateDoc(ref, {
+    const sanitized = cleanFirestoreData({
       ...data,
       updatedAt: serverTimestamp(),
     })
+    await updateDoc(ref, sanitized)
   },
 
   async deleteOccasion(userId: string, occasionId: string): Promise<void> {
@@ -70,22 +72,24 @@ export const occasionService = {
 
   async createGiftPlan(userId: string, data: Omit<GiftPlan, "id" | "userId" | "createdAt" | "updatedAt">): Promise<string> {
     if (!userId) throw new Error("User ID is required.")
-    const docRef = await addDoc(getUserGiftPlansRef(userId), {
+    const sanitized = cleanFirestoreData({
       ...data,
       userId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
+    const docRef = await addDoc(getUserGiftPlansRef(userId), sanitized)
     return docRef.id
   },
 
   async updateGiftPlan(userId: string, planId: string, data: Partial<Omit<GiftPlan, "id" | "userId" | "createdAt">>): Promise<void> {
     if (!userId || !planId) throw new Error("Invalid parameters for update.")
     const ref = doc(db, "users", userId, "giftPlans", planId)
-    await updateDoc(ref, {
+    const sanitized = cleanFirestoreData({
       ...data,
       updatedAt: serverTimestamp(),
     })
+    await updateDoc(ref, sanitized)
   },
 
   async updatePlanStatus(userId: string, planId: string, status: GiftPlanStatus): Promise<void> {

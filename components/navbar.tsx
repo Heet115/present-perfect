@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
 
@@ -46,6 +47,7 @@ export function Navbar() {
   const router = useRouter()
   const { user, logout, loading } = useAuth()
   const [isOpen, setIsOpen] = React.useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false)
 
   const handleLogout = async () => {
     try {
@@ -199,7 +201,7 @@ export function Navbar() {
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem
-                      onClick={handleLogout}
+                      onClick={() => setShowLogoutConfirm(true)}
                       className="cursor-pointer gap-2 text-xs text-destructive hover:bg-destructive/10 py-2"
                     >
                       <LogOut className="size-3.5" />
@@ -321,10 +323,10 @@ export function Navbar() {
                     {user ? (
                       <Button
                         variant="outline"
-                        className="w-full justify-start text-xs rounded-xl text-destructive hover:bg-destructive/10"
+                        className="w-full justify-start text-xs rounded-xl text-destructive hover:bg-destructive/10 cursor-pointer"
                         onClick={() => {
                           setIsOpen(false)
-                          handleLogout()
+                          setShowLogoutConfirm(true)
                         }}
                       >
                         <LogOut data-icon="inline-start" />
@@ -358,6 +360,16 @@ export function Navbar() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Sign Out of Present Perfect?"
+        description="Are you sure you want to end your current concierge session? You can sign back in at any time to access your saved dossiers and gift plans."
+        confirmText="Sign Out"
+        cancelText="Stay Signed In"
+        onConfirm={handleLogout}
+      />
     </header>
   )
 }

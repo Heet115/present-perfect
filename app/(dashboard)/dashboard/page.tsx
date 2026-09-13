@@ -26,6 +26,13 @@ import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useAuth } from "@/context/auth-context"
 import { recipientService } from "@/lib/services/recipient-service"
 import { occasionService } from "@/lib/services/occasion-service"
@@ -263,33 +270,47 @@ export default function DashboardPage() {
             className="flex flex-wrap items-center gap-2.5 bg-card/90 p-2 rounded-2xl border border-border/80 shadow-xs"
           >
             {recipients.length > 0 && (
-              <select
-                value={quickRecipientId}
-                onChange={(e) => setQuickRecipientId(e.target.value)}
-                className="rounded-xl border border-border/70 bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              <Select
+                value={quickRecipientId || "none"}
+                onValueChange={(val) => setQuickRecipientId(val === "none" ? "" : (val ?? ""))}
               >
-                <option value="">Choose Recipient...</option>
-                {recipients.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name} ({r.relationship})
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-8 w-44 rounded-xl border border-border/70 bg-background px-3 text-xs text-foreground cursor-pointer">
+                  <SelectValue placeholder="Choose Recipient...">
+                    {quickRecipientId
+                      ? recipients.find((r) => r.id === quickRecipientId)?.name
+                      : "Choose Recipient..."}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Choose Recipient...</SelectItem>
+                  {recipients.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name} ({r.relationship})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
 
-            <select
+            <Select
               value={quickOccasion}
-              onChange={(e) => setQuickOccasion(e.target.value)}
-              className="rounded-xl border border-border/70 bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              onValueChange={(val) => {
+                if (val) setQuickOccasion(val)
+              }}
             >
-              <option value="Birthday">Birthday</option>
-              <option value="Anniversary">Anniversary</option>
-              <option value="Celebration">Celebration</option>
-              <option value="Thank You">Thank You</option>
-              <option value="Just Because">Just Because</option>
-            </select>
+              <SelectTrigger className="h-8 w-36 rounded-xl border border-border/70 bg-background px-3 text-xs text-foreground cursor-pointer">
+                <SelectValue>{quickOccasion}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Birthday">Birthday</SelectItem>
+                <SelectItem value="Anniversary">Anniversary</SelectItem>
+                <SelectItem value="Celebration">Celebration</SelectItem>
+                <SelectItem value="Thank You">Thank You</SelectItem>
+                <SelectItem value="Just Because">Just Because</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <Button type="submit" size="sm" className="text-xs gap-1.5 shadow-xs cursor-pointer">
+            <Button type="submit" size="sm" className="text-xs gap-1.5 shadow-xs cursor-pointer h-8">
               <Sparkles className="size-3.5" />
               <span>Launch Finder</span>
             </Button>

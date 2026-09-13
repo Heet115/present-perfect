@@ -12,6 +12,16 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { DatePicker } from "@/components/ui/date-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useAuth } from "@/context/auth-context"
 import { recipientService } from "@/lib/services/recipient-service"
 import { occasionService } from "@/lib/services/occasion-service"
@@ -91,21 +101,29 @@ export function OccasionFormDialog({
 
     const selectedRecipient = recipients.find((r) => r.id === recipientId)
 
-    const payload = {
+    const payload: Record<string, any> = {
       title: title.trim(),
-      recipientId: recipientId || undefined,
-      recipientName: selectedRecipient?.name || undefined,
       date,
       type,
-      budget: budget ? parseFloat(budget) : undefined,
-      notes: notes.trim() || undefined,
+    }
+    if (recipientId) {
+      payload.recipientId = recipientId
+      if (selectedRecipient?.name) {
+        payload.recipientName = selectedRecipient.name
+      }
+    }
+    if (budget && !isNaN(parseFloat(budget))) {
+      payload.budget = parseFloat(budget)
+    }
+    if (notes.trim()) {
+      payload.notes = notes.trim()
     }
 
     try {
       if (occasionToEdit?.id) {
         await occasionService.updateOccasion(user.uid, occasionToEdit.id, payload)
       } else {
-        await occasionService.createOccasion(user.uid, payload)
+        await occasionService.createOccasion(user.uid, payload as any)
       }
       onOpenChange(false)
       onSuccess()
@@ -144,9 +162,9 @@ export function OccasionFormDialog({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 pt-2">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground/90">
+            <Label className="text-xs font-medium text-foreground/90">
               Occasion Title *
-            </label>
+            </Label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -158,59 +176,74 @@ export function OccasionFormDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Link to Recipient
-              </label>
-              <select
-                value={recipientId}
-                onChange={(e) => setRecipientId(e.target.value)}
-                className="h-10 rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground outline-none"
+              </Label>
+              <Select
+                value={recipientId || "none"}
+                onValueChange={(val) => setRecipientId(val === "none" ? "" : (val ?? ""))}
               >
-                <option value="">General / Family</option>
-                {recipients.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name} ({r.relationship})
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground">
+                  <SelectValue placeholder="General / Family">
+                    {recipientId
+                      ? recipients.find((r) => r.id === recipientId)?.name
+                      : "General / Family"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">General / Family</SelectItem>
+                  {recipients.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.name} ({r.relationship})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Occasion Type
-              </label>
-              <select
+              </Label>
+              <Select
                 value={type}
-                onChange={(e) => setType(e.target.value as OccasionType)}
-                className="h-10 rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground outline-none"
+                onValueChange={(val) => {
+                  if (val) setType(val as OccasionType)
+                }}
               >
-                {occasionTypes.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 w-full rounded-xl border border-input bg-background/60 px-3 text-xs text-foreground">
+                  <SelectValue>
+                    {occasionTypes.find((t) => t.value === type)?.label || type}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {occasionTypes.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Date *
-              </label>
-              <Input
-                type="date"
+              </Label>
+              <DatePicker
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={setDate}
+                placeholder="Select occasion date"
                 required
-                className="h-10 bg-background/60"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground/90">
+              <Label className="text-xs font-medium text-foreground/90">
                 Target Budget (₹)
-              </label>
+              </Label>
               <Input
                 type="number"
                 value={budget}
@@ -223,15 +256,15 @@ export function OccasionFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground/90">
+            <Label className="text-xs font-medium text-foreground/90">
               Notes & Gifting Vibe
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any planning reminders or special instructions (e.g. Wants a quiet celebration, loves experiences over physical items)"
-              className="w-full resize-none rounded-xl border border-input bg-background/60 p-3 text-xs text-foreground outline-none focus:border-ring"
+              className="min-h-[80px] w-full rounded-xl border border-input bg-background/60 p-3 text-xs text-foreground"
             />
           </div>
 

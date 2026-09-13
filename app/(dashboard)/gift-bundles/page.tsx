@@ -28,6 +28,7 @@ import { recipientService } from "@/lib/services/recipient-service"
 import { CreateBundleDialog } from "@/components/create-bundle-dialog"
 import { ReplaceBundleItemDialog } from "@/components/replace-bundle-item-dialog"
 import { PresentationDrawer } from "@/components/presentation-drawer"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { GiftBundle, BundleItem, PresentationIdea } from "@/lib/types/bundle"
 import { Recipient } from "@/lib/types/recipient"
 
@@ -42,6 +43,7 @@ export default function GiftBundlesPage() {
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [activeBundleForPresentation, setActiveBundleForPresentation] = React.useState<GiftBundle | null>(null)
   const [activeItemForReplace, setActiveItemForReplace] = React.useState<{ bundleId: string; item: BundleItem } | null>(null)
+  const [bundleToDelete, setBundleToDelete] = React.useState<GiftBundle | null>(null)
 
   // Inline add item state map (bundleId -> { title, price })
   const [addingToBundleId, setAddingToBundleId] = React.useState<string | null>(null)
@@ -228,7 +230,7 @@ export default function GiftBundlesPage() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => handleDeleteBundle(bundle.id, bundle.title)}
+                      onClick={() => setBundleToDelete(bundle)}
                       className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl cursor-pointer"
                       title="Delete bundle"
                     >
@@ -430,6 +432,21 @@ export default function GiftBundlesPage() {
           }
         />
       )}
+
+      {/* Confirmation Dialog before deleting bundle */}
+      <ConfirmDialog
+        open={!!bundleToDelete}
+        onOpenChange={(open) => !open && setBundleToDelete(null)}
+        title={`Delete "${bundleToDelete?.title}"?`}
+        description="Are you sure you want to delete this gift bundle? All contained items and tailored presentation notes will be permanently removed."
+        confirmText="Delete Bundle"
+        onConfirm={async () => {
+          if (bundleToDelete) {
+            await handleDeleteBundle(bundleToDelete.id, bundleToDelete.title)
+            setBundleToDelete(null)
+          }
+        }}
+      />
     </div>
   )
 }

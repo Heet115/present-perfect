@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { GiftPlanFormDialog } from "@/components/gift-plan-form-dialog"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useAuth } from "@/context/auth-context"
 import { occasionService } from "@/lib/services/occasion-service"
 import { giftHistoryService } from "@/lib/services/gift-history-service"
@@ -42,6 +43,7 @@ export default function GiftPlansPage() {
   const [loading, setLoading] = React.useState(true)
   const [isFormOpen, setIsFormOpen] = React.useState(false)
   const [planToEdit, setPlanToEdit] = React.useState<GiftPlan | null>(null)
+  const [planToDelete, setPlanToDelete] = React.useState<GiftPlan | null>(null)
   const [activeStatus, setActiveStatus] = React.useState<string>("all")
   const [notification, setNotification] = React.useState<string | null>(null)
 
@@ -320,10 +322,8 @@ export default function GiftPlansPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => {
-                            if (plan.id) handleDelete(plan.id)
-                          }}
+                          className="size-8 text-muted-foreground hover:text-destructive cursor-pointer"
+                          onClick={() => setPlanToDelete(plan)}
                           title="Delete"
                         >
                           <Trash2 className="size-3.5" />
@@ -344,6 +344,21 @@ export default function GiftPlansPage() {
         onOpenChange={setIsFormOpen}
         planToEdit={planToEdit}
         onSuccess={loadPlans}
+      />
+
+      {/* Confirmation Dialog before deleting gift plan */}
+      <ConfirmDialog
+        open={!!planToDelete}
+        onOpenChange={(open) => !open && setPlanToDelete(null)}
+        title={`Delete Plan for ${planToDelete?.recipientName}?`}
+        description="Are you sure you want to discard this gift plan? All shortlisted gift ideas and budget calculations for this plan will be removed."
+        confirmText="Delete Plan"
+        onConfirm={async () => {
+          if (planToDelete?.id) {
+            await handleDelete(planToDelete.id)
+            setPlanToDelete(null)
+          }
+        }}
       />
     </div>
   )

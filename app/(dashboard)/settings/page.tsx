@@ -7,12 +7,16 @@ import { PageHeader } from "@/components/page-header"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useAuth } from "@/context/auth-context"
 
 export default function SettingsPage() {
   const router = useRouter()
   const { user, logout } = useAuth()
   const [displayName, setDisplayName] = React.useState(user?.displayName || "")
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false)
+  const [loggingOut, setLoggingOut] = React.useState(false)
 
   React.useEffect(() => {
     if (user?.displayName) {
@@ -20,12 +24,16 @@ export default function SettingsPage() {
     }
   }, [user])
 
-  const handleLogout = async () => {
+  const handleConfirmLogout = async () => {
     try {
+      setLoggingOut(true)
       await logout()
       router.push("/login")
     } catch (err) {
       console.error("Logout error:", err)
+    } finally {
+      setLoggingOut(false)
+      setShowLogoutConfirm(false)
     }
   }
 
@@ -52,7 +60,7 @@ export default function SettingsPage() {
           <CardContent className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-foreground/80">Display Name</label>
+                <Label className="text-xs font-medium text-foreground/80">Display Name</Label>
                 <Input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -61,7 +69,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-foreground/80">Email Address</label>
+                <Label className="text-xs font-medium text-foreground/80">Email Address</Label>
                 <Input
                   value={user?.email || ""}
                   disabled
@@ -86,11 +94,11 @@ export default function SettingsPage() {
           <CardContent className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-foreground/80">Default Currency</label>
+                <Label className="text-xs font-medium text-foreground/80">Default Currency</Label>
                 <Input defaultValue="INR (₹) - Indian Rupee" className="h-10 bg-background/50" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-foreground/80">Default Reminder Lead Time</label>
+                <Label className="text-xs font-medium text-foreground/80">Default Reminder Lead Time</Label>
                 <Input defaultValue="14 days before occasion" className="h-10 bg-background/50" />
               </div>
             </div>
@@ -126,8 +134,8 @@ export default function SettingsPage() {
           <CardContent>
             <Button
               variant="destructive"
-              onClick={handleLogout}
-              className="gap-2 text-xs"
+              onClick={() => setShowLogoutConfirm(true)}
+              className="gap-2 text-xs cursor-pointer"
             >
               <LogOut data-icon="inline-start" className="size-4" />
               Sign Out of Present Perfect
@@ -135,6 +143,16 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Sign Out of Present Perfect"
+        description="Are you sure you wish to sign out of your concierge session? You will need to log back in to access your dossiers and vault."
+        confirmText="Sign Out"
+        isLoading={loggingOut}
+        onConfirm={handleConfirmLogout}
+      />
     </div>
   )
 }

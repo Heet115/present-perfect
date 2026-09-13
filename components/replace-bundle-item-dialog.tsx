@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { BundleItem } from "@/lib/types/bundle"
 
 interface ReplaceBundleItemDialogProps {
@@ -82,7 +83,7 @@ export function ReplaceBundleItemDialog({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-foreground">New Replacement Item Name *</label>
+            <Label className="text-xs font-medium text-foreground">New Replacement Item Name *</Label>
             <Input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
@@ -94,7 +95,7 @@ export function ReplaceBundleItemDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">Estimated Price ({currency}) *</label>
+              <Label className="text-xs font-medium text-foreground">Estimated Price ({currency}) *</Label>
               <Input
                 type="number"
                 value={newPrice}
@@ -105,7 +106,7 @@ export function ReplaceBundleItemDialog({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-foreground">Category</label>
+              <Label className="text-xs font-medium text-foreground">Category</Label>
               <Input
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}

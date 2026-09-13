@@ -20,3 +20,35 @@ const googleProvider = new GoogleAuthProvider()
 googleProvider.setCustomParameters({ prompt: "select_account" })
 
 export { app, auth, db, googleProvider }
+
+/**
+ * Recursively strips undefined keys and nested undefined values
+ * to prevent Firestore "Function addDoc() called with invalid data. Unsupported field value: undefined" errors.
+ */
+export function cleanFirestoreData<T extends Record<string, any>>(data: T): Partial<T> {
+  const clean: Record<string, any> = {}
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      if (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        !(value instanceof Date) &&
+        !("_methodName" in value)
+      ) {
+        clean[key] = cleanFirestoreData(value)
+      } else if (Array.isArray(value)) {
+        clean[key] = value
+          .map((item) =>
+            item !== null && typeof item === "object" && !(item instanceof Date)
+              ? cleanFirestoreData(item)
+              : item
+          )
+          .filter((item) => item !== undefined)
+      } else {
+        clean[key] = value
+      }
+    }
+  }
+  return clean as Partial<T>
+}

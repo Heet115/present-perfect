@@ -10,7 +10,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { db, cleanFirestoreData } from "@/lib/firebase"
 import { GiftBundle, BundleItem, PresentationIdea } from "@/lib/types/bundle"
 
 const getBundlesRef = (userId: string) =>
@@ -43,12 +43,13 @@ export const bundleService = {
     data: Omit<GiftBundle, "id" | "userId" | "createdAt" | "updatedAt">
   ): Promise<string> {
     if (!userId) throw new Error("User ID is required.")
-    const docRef = await addDoc(getBundlesRef(userId), {
+    const sanitized = cleanFirestoreData({
       ...data,
       userId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
+    const docRef = await addDoc(getBundlesRef(userId), sanitized)
     return docRef.id
   },
 
@@ -59,10 +60,11 @@ export const bundleService = {
   ): Promise<void> {
     if (!userId || !bundleId) return
     const ref = doc(db, "users", userId, "gift_bundles", bundleId)
-    await updateDoc(ref, {
+    const sanitized = cleanFirestoreData({
       ...data,
       updatedAt: serverTimestamp(),
     })
+    await updateDoc(ref, sanitized)
   },
 
   async delete(userId: string, bundleId: string): Promise<void> {
