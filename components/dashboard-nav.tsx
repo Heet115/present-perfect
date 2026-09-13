@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   LayoutDashboard,
   Sparkles,
@@ -13,8 +13,12 @@ import {
   History,
   Settings,
   ChevronRight,
+  LogOut,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
 
 export const dashboardNavItems = [
@@ -85,6 +89,28 @@ export const dashboardNavItems = [
 
 export function DashboardNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, logout } = useAuth()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      router.push("/login")
+    } catch (err) {
+      console.error("Logout error:", err)
+    }
+  }
+
+  const initials = user?.displayName
+    ? user.displayName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : user?.email
+    ? user.email.slice(0, 2).toUpperCase()
+    : "PP"
 
   return (
     <aside className="w-64 shrink-0 hidden md:block">
@@ -146,6 +172,40 @@ export function DashboardNav() {
             </nav>
           </div>
         ))}
+
+        {/* User Session Footer Card */}
+        {user && (
+          <div className="flex flex-col gap-3 pt-2 border-t border-border/60">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Avatar size="sm">
+                  {user.photoURL && (
+                    <AvatarImage src={user.photoURL} alt={user.displayName || "User"} />
+                  )}
+                  <AvatarFallback className="bg-secondary text-primary font-semibold text-[11px]">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-serif font-bold text-foreground truncate">
+                    {user.displayName || "Concierge Member"}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground truncate">
+                    {user.email}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                title="Log out"
+                className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+              >
+                <LogOut className="size-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   )

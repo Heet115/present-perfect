@@ -2,13 +2,33 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Gift, Menu, Sparkles, ArrowRight, User } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import {
+  Gift,
+  Menu,
+  Sparkles,
+  ArrowRight,
+  User as UserIcon,
+  LogOut,
+  LayoutDashboard,
+  Bookmark,
+  Settings as SettingsIcon,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
 
 const navLinks = [
@@ -22,7 +42,30 @@ const navLinks = [
 
 export function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, logout, loading } = useAuth()
   const [isOpen, setIsOpen] = React.useState(false)
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      router.push("/login")
+    } catch (err) {
+      console.error("Logout error:", err)
+    }
+  }
+
+  // Get user initials for avatar fallback
+  const initials = user?.displayName
+    ? user.displayName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : user?.email
+    ? user.email.slice(0, 2).toUpperCase()
+    : "PP"
 
   return (
     <header className="sticky top-0 sm:top-3 z-40 w-full px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto transition-all duration-300">
@@ -82,25 +125,109 @@ export function Navbar() {
 
           <Separator orientation="vertical" className="hidden h-5 sm:block" />
 
-          {/* Sign In & Find a Gift (Desktop) */}
+          {/* Authenticated vs Guest Desktop UI */}
           <div className="hidden items-center gap-2 sm:flex">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-muted-foreground hover:text-foreground"
-              render={<Link href="/login" />}
-            >
-              <User data-icon="inline-start" />
-              Sign in
-            </Button>
-            <Button
-              size="sm"
-              className="text-xs shadow-xs hover:shadow-md transition-all font-medium"
-              render={<Link href="/find-gift" />}
-            >
-              <Sparkles data-icon="inline-start" />
-              Find a Gift
-            </Button>
+            {!loading && user ? (
+              <>
+                <Button
+                  size="sm"
+                  className="text-xs shadow-xs hover:shadow-md transition-all font-medium"
+                  render={<Link href="/find-gift" />}
+                >
+                  <Sparkles data-icon="inline-start" />
+                  Find a Gift
+                </Button>
+
+                {/* User Dropdown Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <button
+                        className="flex size-9 items-center justify-center rounded-full ring-1 ring-border/80 hover:ring-primary transition-all outline-none"
+                        aria-label="User account menu"
+                      >
+                        <Avatar size="sm">
+                          {user.photoURL && (
+                            <AvatarImage src={user.photoURL} alt={user.displayName || "User"} />
+                          )}
+                          <AvatarFallback className="bg-secondary text-primary font-semibold text-xs">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                      </button>
+                    }
+                  />
+                  <DropdownMenuContent align="end" className="w-56 p-2 bg-card/95 backdrop-blur-xl border border-border/80">
+                    <div className="flex flex-col gap-1 p-2">
+                      <span className="font-serif font-bold text-sm text-foreground truncate">
+                        {user.displayName || "Concierge Member"}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {user.email}
+                      </span>
+                    </div>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem
+                        onClick={() => router.push("/dashboard")}
+                        className="cursor-pointer gap-2 text-xs py-2"
+                      >
+                        <LayoutDashboard className="size-3.5 text-muted-foreground" />
+                        <span>Dashboard</span>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        onClick={() => router.push("/saved-gifts")}
+                        className="cursor-pointer gap-2 text-xs py-2"
+                      >
+                        <Bookmark className="size-3.5 text-muted-foreground" />
+                        <span>Saved Gifts</span>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        onClick={() => router.push("/settings")}
+                        className="cursor-pointer gap-2 text-xs py-2"
+                      >
+                        <SettingsIcon className="size-3.5 text-muted-foreground" />
+                        <span>Preferences</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="cursor-pointer gap-2 text-xs text-destructive hover:bg-destructive/10 py-2"
+                    >
+                      <LogOut className="size-3.5" />
+                      <span>Log Out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                  render={<Link href="/login" />}
+                >
+                  <UserIcon data-icon="inline-start" />
+                  Sign in
+                </Button>
+                <Button
+                  size="sm"
+                  className="text-xs shadow-xs hover:shadow-md transition-all font-medium"
+                  render={<Link href="/find-gift" />}
+                >
+                  <Sparkles data-icon="inline-start" />
+                  Find a Gift
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Trigger */}
@@ -136,6 +263,27 @@ export function Navbar() {
                     </div>
                   </div>
 
+                  {user && (
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-secondary/40 border border-border/60">
+                      <Avatar size="default">
+                        {user.photoURL && (
+                          <AvatarImage src={user.photoURL} alt={user.displayName || "User"} />
+                        )}
+                        <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-serif font-bold text-sm text-foreground truncate">
+                          {user.displayName || "Concierge Member"}
+                        </span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {user.email}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   <Separator />
 
                   <nav className="flex flex-col gap-1.5">
@@ -169,23 +317,39 @@ export function Navbar() {
                   <Separator />
 
                   <div className="flex flex-col gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-xs rounded-xl"
-                      onClick={() => setIsOpen(false)}
-                      render={<Link href="/login" />}
-                    >
-                      <User data-icon="inline-start" />
-                      Sign In
-                    </Button>
-                    <Button
-                      className="w-full justify-start text-xs rounded-xl shadow-sm"
-                      onClick={() => setIsOpen(false)}
-                      render={<Link href="/find-gift" />}
-                    >
-                      <Sparkles data-icon="inline-start" />
-                      Start Gift Finder
-                    </Button>
+                    {user ? (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-xs rounded-xl text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          setIsOpen(false)
+                          handleLogout()
+                        }}
+                      >
+                        <LogOut data-icon="inline-start" />
+                        Log Out
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-xs rounded-xl"
+                          onClick={() => setIsOpen(false)}
+                          render={<Link href="/login" />}
+                        >
+                          <UserIcon data-icon="inline-start" />
+                          Sign In
+                        </Button>
+                        <Button
+                          className="w-full justify-start text-xs rounded-xl shadow-sm"
+                          onClick={() => setIsOpen(false)}
+                          render={<Link href="/find-gift" />}
+                        >
+                          <Sparkles data-icon="inline-start" />
+                          Start Gift Finder
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </SheetContent>

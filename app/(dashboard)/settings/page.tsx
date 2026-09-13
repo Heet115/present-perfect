@@ -1,16 +1,34 @@
-import type { Metadata } from "next"
-import { Settings, User, Bell, Palette, Shield } from "lucide-react"
+"use client"
+
+import * as React from "react"
+import { useRouter } from "next/navigation"
+import { User, Bell, Palette, LogOut, Sparkles } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-export const metadata: Metadata = {
-  title: "Settings — Present Perfect",
-  description: "Manage account settings, currency preferences, notification thresholds, and security.",
-}
+import { useAuth } from "@/context/auth-context"
 
 export default function SettingsPage() {
+  const router = useRouter()
+  const { user, logout } = useAuth()
+  const [displayName, setDisplayName] = React.useState(user?.displayName || "")
+
+  React.useEffect(() => {
+    if (user?.displayName) {
+      setDisplayName(user.displayName)
+    }
+  }, [user])
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      router.push("/login")
+    } catch (err) {
+      console.error("Logout error:", err)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
@@ -21,7 +39,7 @@ export default function SettingsPage() {
 
       <div className="flex flex-col gap-6">
         {/* Profile Details */}
-        <Card className="border-border/60 bg-card/70">
+        <Card className="border-border/70 bg-card/75 shadow-xs">
           <CardHeader>
             <div className="flex items-center gap-2">
               <User className="size-4 text-primary" />
@@ -35,21 +53,27 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-foreground/80">Display Name</label>
-                <Input defaultValue="Heet" className="h-9 bg-background/50" />
+                <Input
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Your Name"
+                  className="h-10 bg-background/50"
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-foreground/80">Email Address</label>
-                <Input defaultValue="heet@example.com" disabled className="h-9 bg-background/30" />
+                <Input
+                  value={user?.email || ""}
+                  disabled
+                  className="h-10 bg-background/30 text-muted-foreground"
+                />
               </div>
-            </div>
-            <div className="flex justify-end">
-              <Button size="sm">Save Changes</Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Currency & Gifting Preferences */}
-        <Card className="border-border/60 bg-card/70">
+        <Card className="border-border/70 bg-card/75 shadow-xs">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Palette className="size-4 text-primary" />
@@ -63,18 +87,18 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-foreground/80">Default Currency</label>
-                <Input defaultValue="INR (₹) - Indian Rupee" className="h-9 bg-background/50" />
+                <Input defaultValue="INR (₹) - Indian Rupee" className="h-10 bg-background/50" />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-foreground/80">Default Reminder Lead Time</label>
-                <Input defaultValue="14 days before occasion" className="h-9 bg-background/50" />
+                <Input defaultValue="14 days before occasion" className="h-10 bg-background/50" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Notifications & Security */}
-        <Card className="border-border/60 bg-card/70">
+        <Card className="border-border/70 bg-card/75 shadow-xs">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Bell className="size-4 text-primary" />
@@ -85,9 +109,29 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">
-              Automated email and push reminders for upcoming dates will be connected with Firestore in Phase 3 & 4.
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Automated milestone reminders will synchronize with your Firestore database in Phase 3 & 4.
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Sign Out Card */}
+        <Card className="border-destructive/30 bg-destructive/5 shadow-xs">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold text-destructive">Account Session</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              Log out of your personal gifting concierge session on this device
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="destructive"
+              onClick={handleLogout}
+              className="gap-2 text-xs"
+            >
+              <LogOut data-icon="inline-start" className="size-4" />
+              Sign Out of Present Perfect
+            </Button>
           </CardContent>
         </Card>
       </div>

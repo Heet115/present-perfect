@@ -4,6 +4,7 @@ import { Cormorant_Garamond, Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { AuthProvider } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -38,7 +39,9 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-background text-foreground selection:bg-accent/30 selection:text-foreground">
         <ThemeProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <AuthProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
