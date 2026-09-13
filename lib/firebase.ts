@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app"
 import { getAuth, GoogleAuthProvider } from "firebase/auth"
+import { getFirestore } from "firebase/firestore"
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,7 +15,8 @@ const firebaseConfig = {
 // Initialize Firebase as a singleton instance
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
 const auth = getAuth(app)
+const db = getFirestore(app)
 const googleProvider = new GoogleAuthProvider()
 googleProvider.setCustomParameters({ prompt: "select_account" })
 
-export { app, auth, googleProvider }
+export { app, auth, db, googleProvider }
