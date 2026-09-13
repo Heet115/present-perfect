@@ -39,6 +39,7 @@ import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/context/auth-context"
 import { recipientService } from "@/lib/services/recipient-service"
 import { occasionService } from "@/lib/services/occasion-service"
+import { savedGiftService } from "@/lib/services/saved-gift-service"
 import { Recipient } from "@/lib/types/recipient"
 import {
   RecommendationRequest,
@@ -277,6 +278,22 @@ export default function FindGiftPage() {
       setTimeout(() => setSavedNotification(null), 4000)
     } catch (err) {
       console.error("Save to plan error:", err)
+    }
+  }
+
+  const handleSaveToVault = async (rec: GiftRecommendation) => {
+    if (!user) return
+    try {
+      await savedGiftService.save(user.uid, {
+        recipientId: selectedRecipientId || undefined,
+        recipientName: recipientName.trim() || "Someone Special",
+        recommendation: rec,
+        notes: `Saved via AI Gift Finder for ${occasion}. Note: "${rec.handwrittenNote}"`,
+      })
+      setSavedNotification(`Saved "${rec.name}" to your permanent Gift Vault!`)
+      setTimeout(() => setSavedNotification(null), 4000)
+    } catch (err) {
+      console.error("Save to vault error:", err)
     }
   }
 
@@ -1044,6 +1061,7 @@ export default function FindGiftPage() {
                   recommendation={rec}
                   recipientName={recipientName}
                   onSaveToPlan={handleSaveToPlan}
+                  onSaveToVault={handleSaveToVault}
                   onSelectAlternative={(altName, altPrice) =>
                     handleSelectAlternative(rec.id, altName, altPrice)
                   }

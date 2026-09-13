@@ -29,6 +29,7 @@ interface RecommendationCardProps {
   recommendation: GiftRecommendation
   recipientName: string
   onSaveToPlan?: (rec: GiftRecommendation) => void
+  onSaveToVault?: (rec: GiftRecommendation) => void
   onSelectAlternative?: (altName: string, altPrice: number) => void
 }
 
@@ -36,10 +37,12 @@ export function RecommendationCard({
   recommendation,
   recipientName,
   onSaveToPlan,
+  onSaveToVault,
   onSelectAlternative,
 }: RecommendationCardProps) {
   const [copied, setCopied] = React.useState(false)
   const [isSaved, setIsSaved] = React.useState(false)
+  const [isVaultSaved, setIsVaultSaved] = React.useState(false)
   const [showAlternatives, setShowAlternatives] = React.useState(false)
 
   const handleCopyNote = () => {
@@ -329,7 +332,23 @@ export function RecommendationCard({
           <ExternalLink className="size-3" />
         </a>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {onSaveToVault && (
+            <Button
+              variant={isVaultSaved ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => {
+                onSaveToVault(recommendation)
+                setIsVaultSaved(true)
+              }}
+              title="Save to permanent vault"
+              className="text-xs gap-1 rounded-xl cursor-pointer"
+            >
+              <Bookmark className={`size-3.5 ${isVaultSaved ? "fill-primary text-primary" : ""}`} />
+              <span className="hidden sm:inline">{isVaultSaved ? "Saved" : "Save"}</span>
+            </Button>
+          )}
+
           {onSaveToPlan && (
             <Button
               variant={isSaved ? "secondary" : "outline"}
@@ -338,9 +357,9 @@ export function RecommendationCard({
                 onSaveToPlan(recommendation)
                 setIsSaved(true)
               }}
-              className="text-xs gap-1 rounded-xl"
+              className="text-xs gap-1 rounded-xl cursor-pointer"
             >
-              <Bookmark className={`size-3.5 ${isSaved ? "fill-primary text-primary" : ""}`} />
+              <Sparkles className={`size-3.5 ${isSaved ? "text-primary" : ""}`} />
               <span>{isSaved ? "Shortlisted" : "Shortlist to Plan"}</span>
             </Button>
           )}

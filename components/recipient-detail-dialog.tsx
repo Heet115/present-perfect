@@ -14,6 +14,8 @@ import {
   Gift,
   ThumbsDown,
   Clock,
+  History,
+  Bookmark,
 } from "lucide-react"
 import {
   Dialog,
@@ -26,7 +28,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { useAuth } from "@/context/auth-context"
+import { giftHistoryService } from "@/lib/services/gift-history-service"
+import { savedGiftService } from "@/lib/services/saved-gift-service"
 import { Recipient } from "@/lib/types/recipient"
+import { GiftHistoryItem } from "@/lib/types/gift-history"
+import { SavedGift } from "@/lib/types/saved-gift"
 
 interface RecipientDetailDialogProps {
   open: boolean
@@ -43,7 +50,31 @@ export function RecipientDetailDialog({
   onEdit,
   onDelete,
 }: RecipientDetailDialogProps) {
+  const { user } = useAuth()
   const [showConfirmDelete, setShowConfirmDelete] = React.useState(false)
+  const [pastGifts, setPastGifts] = React.useState<GiftHistoryItem[]>([])
+  const [vaultGifts, setVaultGifts] = React.useState<SavedGift[]>([])
+  const [loadingHistory, setLoadingHistory] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!open || !user || !recipient?.id) return
+    setLoadingHistory(true)
+    Promise.all([
+      giftHistoryService.getAll(user.uid, recipient.id),
+      savedGiftService.getAll(user.uid),
+    ])
+      .then(([historyList, savedList]) => {
+        setPastGifts(historyList)
+        const matchedVault = savedList.filter(
+          (s) =>
+            s.recipientId === recipient.id ||
+            s.recipientName?.toLowerCase() === recipient.name.toLowerCase()
+        )
+        setVaultGifts(matchedVault)
+      })
+      .catch(console.error)
+      .finally(() => setLoadingHistory(false))
+  }, [open, user, recipient])
 
   if (!recipient) return null
 
@@ -178,6 +209,82 @@ export function RecipientDetailDialog({
                       <span className="font-serif font-bold text-foreground text-sm">{date.title}</span>
                     </div>
                     <span className="font-mono text-xs text-muted-foreground">{date.date}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Phase 8: Recipient-Wise Gift History */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold uppercase tracking-wider text-muted-foreground text-[10px] flex items-center gap-1">
+                <History className="size-3 text-primary" />
+                <span>Gift History ({pastGifts.length})</span>
+              </span>
+              <Link
+                href="/gift-history"
+                className="text-[10px] text-primary hover:underline font-medium"
+              >
+                Open Archive →
+              </Link>
+            </div>
+
+            {pastGifts.length > 0 ? (
+              <div className="flex flex-col gap-1.5">
+                {pastGifts.map((pg) => (
+                  <div
+                    key={pg.id}
+                    className="p-2.5 rounded-xl bg-secondary/20 border border-border/40 flex items-center justify-between gap-2 text-xs"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium text-foreground">{pg.giftName}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {pg.occasion} • {pg.giftDate}
+                      </span>
+                    </div>
+                    <span className="font-serif font-bold text-foreground shrink-0">
+                      {pg.currency || "₹"}{pg.giftPrice.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-secondary/10 border border-border/30 text-center text-xs text-muted-foreground">
+                No previous gifts recorded for {recipient.name} yet.
+              </div>
+            )}
+          </div>
+
+          {/* Phase 8: Bookmarked in Vault */}
+          {vaultGifts.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold uppercase tracking-wider text-muted-foreground text-[10px] flex items-center gap-1">
+                  <Bookmark className="size-3 text-primary" />
+                  <span>Bookmarked in Vault ({vaultGifts.length})</span>
+                </span>
+                <Link
+                  href="/saved-gifts"
+                  className="text-[10px] text-primary hover:underline font-medium"
+                >
+                  View Vault →
+                </Link>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                {vaultGifts.map((vg) => (
+                  <div
+                    key={vg.id}
+                    className="p-2.5 rounded-xl bg-secondary/20 border border-border/40 flex items-center justify-between gap-2 text-xs"
+                  >
+                    <span className="font-medium text-foreground truncate">
+                      {vg.recommendation.name}
+                    </span>
+                    <span className="font-serif font-bold text-foreground shrink-0">
+                      {vg.recommendation.currency}
+                      {vg.recommendation.estimatedPrice.toLocaleString()}
+                    </span>
                   </div>
                 ))}
               </div>
