@@ -20,19 +20,29 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/context/auth-context"
 import { recipientService } from "@/lib/services/recipient-service"
+import { occasionService } from "@/lib/services/occasion-service"
 import { Recipient } from "@/lib/types/recipient"
+import { Occasion, GiftPlan } from "@/lib/types/occasion"
 
 export default function DashboardPage() {
   const { user } = useAuth()
   const [recipients, setRecipients] = React.useState<Recipient[]>([])
+  const [occasions, setOccasions] = React.useState<Occasion[]>([])
+  const [plans, setPlans] = React.useState<GiftPlan[]>([])
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
     async function loadData() {
       if (!user) return
       try {
-        const data = await recipientService.getAll(user.uid)
-        setRecipients(data)
+        const [rData, oData, pData] = await Promise.all([
+          recipientService.getAll(user.uid),
+          occasionService.getAllOccasions(user.uid),
+          occasionService.getAllGiftPlans(user.uid),
+        ])
+        setRecipients(rData)
+        setOccasions(oData)
+        setPlans(pData)
       } catch (err) {
         console.error("Dashboard load error:", err)
       } finally {
@@ -97,7 +107,7 @@ export default function DashboardPage() {
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             ) : (
               <div className="text-3xl font-bold font-serif text-foreground">
-                {allDates.length}
+                {occasions.length}
               </div>
             )}
             <p className="text-xs text-muted-foreground mt-1">Scheduled dates</p>
@@ -112,8 +122,14 @@ export default function DashboardPage() {
             <ClipboardList className="size-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold font-serif text-foreground">0</div>
-            <p className="text-xs text-muted-foreground mt-1">In progress (Phase 4)</p>
+            {loading ? (
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            ) : (
+              <div className="text-3xl font-bold font-serif text-foreground">
+                {plans.length}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">Active pipelines</p>
           </CardContent>
         </Card>
 
