@@ -121,7 +121,7 @@ Respond ONLY with a valid JSON array of 5 objects matching this exact structure:
       try {
         const ai = new GoogleGenAI({ apiKey })
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.8-flash",
           contents: prompt,
           config: {
             responseMimeType: "application/json",

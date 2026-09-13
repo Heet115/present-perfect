@@ -212,13 +212,22 @@ export default function OccasionsPage() {
                     </CardContent>
 
                     <CardFooter className="p-5 pt-2 border-t border-border/50 flex items-center justify-between gap-2">
-                      <Link
-                        href={`/gift-plans?occasion=${encodeURIComponent(occasion.title)}`}
-                        className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-                      >
-                        <span>Gift Plan</span>
-                        <ArrowRight className="size-3" />
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={`/find-gift?recipient=${encodeURIComponent(occasion.recipientName || "")}&recipientId=${occasion.recipientId || ""}&occasion=${encodeURIComponent(occasion.title)}&budget=${occasion.budget || ""}`}
+                          className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                        >
+                          <Sparkles className="size-3" />
+                          <span>Find Gift</span>
+                        </Link>
+                        <Link
+                          href={`/gift-plans?occasion=${encodeURIComponent(occasion.title)}`}
+                          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                        >
+                          <span>Plan</span>
+                          <ArrowRight className="size-3" />
+                        </Link>
+                      </div>
 
                       <div className="flex items-center gap-1">
                         <Button

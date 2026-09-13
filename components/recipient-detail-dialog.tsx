@@ -369,7 +369,7 @@ export function RecipientDetailDialog({
                 Delete Dossier
               </Button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -393,10 +393,16 @@ export function RecipientDetailDialog({
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => onOpenChange(false)}
-                  className="text-xs cursor-pointer"
+                  render={
+                    <Link
+                      href={`/find-gift?recipient=${encodeURIComponent(recipient.name)}&recipientId=${recipient.id}`}
+                      onClick={() => onOpenChange(false)}
+                    />
+                  }
+                  className="text-xs gap-1.5 cursor-pointer shadow-xs"
                 >
-                  Close
+                  <Sparkles className="size-3.5" />
+                  Find Gift
                 </Button>
               </div>
             </>

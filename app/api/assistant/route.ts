@@ -29,7 +29,7 @@ Current Recipient Context:
         }))
 
         const chat = ai.chats.create({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.8-flash",
           config: {
             systemInstruction,
           },

@@ -11,6 +11,7 @@ import {
   Wallet,
   Loader2,
   Gift,
+  Feather,
 } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { PersonalCardDialog } from "@/components/personal-card-dialog"
 import { useAuth } from "@/context/auth-context"
 import { savedGiftService } from "@/lib/services/saved-gift-service"
 import { occasionService } from "@/lib/services/occasion-service"
@@ -33,6 +35,7 @@ export default function SavedGiftsPage() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedRecipientFilter, setSelectedRecipientFilter] = React.useState("All")
   const [notification, setNotification] = React.useState<string | null>(null)
+  const [cardGift, setCardGift] = React.useState<SavedGift | null>(null)
 
   const loadData = React.useCallback(async () => {
     if (!user) return
@@ -257,6 +260,16 @@ export default function SavedGiftsPage() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => setCardGift(item)}
+                      className="text-xs gap-1 rounded-xl cursor-pointer"
+                    >
+                      <Feather className="size-3 text-primary" />
+                      <span>Card</span>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleMoveToPlan(item)}
                       className="text-xs gap-1 rounded-xl cursor-pointer"
                     >
@@ -297,6 +310,15 @@ export default function SavedGiftsPage() {
           }
         />
       )}
+
+      <PersonalCardDialog
+        open={!!cardGift}
+        onOpenChange={(open) => {
+          if (!open) setCardGift(null)
+        }}
+        initialRecipientName={cardGift?.recipientName}
+        giftItemName={cardGift?.recommendation.name}
+      />
     </div>
   )
 }

@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   ArrowRight,
   Coins,
+  History,
 } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
 import { EmptyState } from "@/components/empty-state"
@@ -24,6 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { GiftPlanFormDialog } from "@/components/gift-plan-form-dialog"
 import { useAuth } from "@/context/auth-context"
 import { occasionService } from "@/lib/services/occasion-service"
+import { giftHistoryService } from "@/lib/services/gift-history-service"
 import { GiftPlan, GiftPlanStatus } from "@/lib/types/occasion"
 
 const statusFilters: { label: string; value: string }[] = [
@@ -41,6 +43,7 @@ export default function GiftPlansPage() {
   const [isFormOpen, setIsFormOpen] = React.useState(false)
   const [planToEdit, setPlanToEdit] = React.useState<GiftPlan | null>(null)
   const [activeStatus, setActiveStatus] = React.useState<string>("all")
+  const [notification, setNotification] = React.useState<string | null>(null)
 
   const loadPlans = React.useCallback(async () => {
     if (!user) return
@@ -81,6 +84,30 @@ export default function GiftPlansPage() {
     }
   }
 
+  const handleLogToHistory = async (plan: GiftPlan) => {
+    if (!user) return
+    try {
+      const giftTitle =
+        plan.giftIdeas?.find((i) => i.isSelected)?.title ||
+        plan.giftIdeas?.[0]?.title ||
+        `Gift for ${plan.recipientName}`
+      await giftHistoryService.create(user.uid, {
+        recipientId: plan.recipientId || "custom",
+        recipientName: plan.recipientName,
+        giftName: giftTitle,
+        occasion: plan.occasionTitle || "Special Occasion",
+        giftDate: plan.occasionDate || new Date().toISOString().split("T")[0],
+        giftPrice: plan.actualSpend || plan.targetBudget || 2500,
+        currency: plan.currency || "₹",
+        giftNotes: plan.notes || "Completed from active gift plan.",
+      })
+      setNotification(`Recorded "${giftTitle}" in Gift History archive!`)
+      setTimeout(() => setNotification(null), 4000)
+    } catch (err) {
+      console.error("Log to history error:", err)
+    }
+  }
+
   const filteredPlans = plans.filter((p) => {
     if (activeStatus === "all") return true
     return p.status === activeStatus
@@ -117,6 +144,13 @@ export default function GiftPlansPage() {
           Create Gift Plan
         </Button>
       </PageHeader>
+
+      {notification && (
+        <div className="rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-xs font-medium text-foreground flex items-center gap-2 animate-in fade-in duration-300">
+          <History className="size-4 text-primary shrink-0" />
+          <span>{notification}</span>
+        </div>
+      )}
 
       {/* Loading state */}
       {loading ? (
@@ -249,16 +283,25 @@ export default function GiftPlansPage() {
                           onClick={() => {
                             if (plan.id) handleStatusChange(plan.id, next)
                           }}
-                          className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                          className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
                         >
                           <span>Advance to {next}</span>
                           <ArrowRight className="size-3" />
                         </button>
                       ) : (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <CheckCircle2 className="size-3 text-primary" />
-                          <span>Gift Completed</span>
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <CheckCircle2 className="size-3 text-primary" />
+                            <span>Completed</span>
+                          </span>
+                          <button
+                            onClick={() => handleLogToHistory(plan)}
+                            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <History className="size-3" />
+                            <span>Log to Archive</span>
+                          </button>
+                        </div>
                       )}
 
                       <div className="flex items-center gap-1">

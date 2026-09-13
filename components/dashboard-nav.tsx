@@ -14,6 +14,7 @@ import {
   Settings,
   ChevronRight,
   LogOut,
+  Layers,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -59,6 +60,12 @@ export const dashboardNavItems = [
         href: "/gift-plans",
         icon: ClipboardList,
         badge: null,
+      },
+      {
+        title: "Gift Bundles",
+        href: "/gift-bundles",
+        icon: Layers,
+        badge: "New",
       },
     ],
   },

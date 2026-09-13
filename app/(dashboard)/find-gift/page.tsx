@@ -87,6 +87,9 @@ export default function FindGiftPage() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const prefillName = searchParams.get("recipient")
+  const prefillId = searchParams.get("recipientId")
+  const prefillOccasion = searchParams.get("occasion")
+  const prefillBudget = searchParams.get("budget")
 
   const [recipients, setRecipients] = React.useState<Recipient[]>([])
   const [selectedRecipientId, setSelectedRecipientId] = React.useState<string>("")
@@ -128,7 +131,9 @@ export default function FindGiftPage() {
     if (!user) return
     recipientService.getAll(user.uid).then((data) => {
       setRecipients(data)
-      if (prefillName) {
+      if (prefillId) {
+        handleSelectRecipient(prefillId, data)
+      } else if (prefillName) {
         const found = data.find((r) => r.name.toLowerCase() === prefillName.toLowerCase())
         if (found && found.id) {
           handleSelectRecipient(found.id, data)
@@ -136,8 +141,14 @@ export default function FindGiftPage() {
           setRecipientName(prefillName)
         }
       }
+      if (prefillOccasion) {
+        setOccasion(prefillOccasion)
+      }
+      if (prefillBudget && !isNaN(Number(prefillBudget))) {
+        setBudget(Number(prefillBudget))
+      }
     }).catch(console.error)
-  }, [user, prefillName])
+  }, [user, prefillName, prefillId, prefillOccasion, prefillBudget])
 
   const handleSelectRecipient = (id: string, list = recipients) => {
     setSelectedRecipientId(id)
